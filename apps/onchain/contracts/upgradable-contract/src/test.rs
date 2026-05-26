@@ -1,12 +1,12 @@
 #![cfg(test)]
 extern crate std;
 
+use crate::storage::TimelockAction;
 use crate::{UpgradableContract, UpgradableContractClient};
 use soroban_sdk::{
     testutils::{Address as _, Events, Ledger},
     Address, Bytes, BytesN, Env,
 };
-use crate::storage::TimelockAction;
 
 const CONTRACT_WASM: &[u8] = include_bytes!("./mock/upgradable_contract.wasm");
 
@@ -270,7 +270,8 @@ fn test_execute_after_delay_succeeds() {
     let action = TimelockAction::SetAdmin(new_admin.clone());
     let id = client.queue_operation(&admin, &action);
 
-    env.ledger().set_timestamp(env.ledger().timestamp() + 86_401);
+    env.ledger()
+        .set_timestamp(env.ledger().timestamp() + 86_401);
 
     client.execute_operation(&admin, &id);
 
@@ -289,7 +290,8 @@ fn test_execute_emits_event() {
     let action = TimelockAction::SetAdmin(new_admin);
     let id = client.queue_operation(&admin, &action);
 
-    env.ledger().set_timestamp(env.ledger().timestamp() + 86_401);
+    env.ledger()
+        .set_timestamp(env.ledger().timestamp() + 86_401);
 
     let before = env.events().all().len();
     client.execute_operation(&admin, &id);

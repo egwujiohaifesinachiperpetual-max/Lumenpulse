@@ -1,10 +1,13 @@
 #![no_std]
 
+mod errors;
 mod events;
 mod storage;
-mod errors;
 
-use events::{AdminChangedEvent, OperationCancelledEvent, OperationExecutedEvent, OperationQueuedEvent, UpgradedEvent};
+use events::{
+    AdminChangedEvent, OperationCancelledEvent, OperationExecutedEvent, OperationQueuedEvent,
+    UpgradedEvent,
+};
 use soroban_sdk::{contract, contractimpl, contracttype, Address, BytesN, Env};
 use storage::{QueuedOperation, TimelockAction, LEDGER_BUMP, LEDGER_THRESHOLD, MIN_DELAY_SECONDS};
 
@@ -27,8 +30,12 @@ impl UpgradableContract {
         }
         admin.require_auth();
         env.storage().instance().set(&DataKey::Admin, &admin);
-        env.storage().instance().set(&DataKey::NextOperationId, &0u32);
-        env.storage().instance().extend_ttl(LEDGER_THRESHOLD, LEDGER_BUMP);
+        env.storage()
+            .instance()
+            .set(&DataKey::NextOperationId, &0u32);
+        env.storage()
+            .instance()
+            .extend_ttl(LEDGER_THRESHOLD, LEDGER_BUMP);
     }
 
     /// Queue a sensitive admin action with a 24-hour delay.
@@ -152,7 +159,8 @@ impl UpgradableContract {
 
         match op.action.clone() {
             TimelockAction::Upgrade(new_wasm_hash) => {
-                env.deployer().update_current_contract_wasm(new_wasm_hash.clone());
+                env.deployer()
+                    .update_current_contract_wasm(new_wasm_hash.clone());
                 UpgradedEvent {
                     admin: executor.clone(),
                     new_wasm_hash,
@@ -190,7 +198,8 @@ impl UpgradableContract {
         }
         caller.require_auth();
 
-        env.deployer().update_current_contract_wasm(new_wasm_hash.clone());
+        env.deployer()
+            .update_current_contract_wasm(new_wasm_hash.clone());
 
         UpgradedEvent {
             admin: caller,
