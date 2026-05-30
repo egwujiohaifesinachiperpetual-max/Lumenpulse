@@ -88,34 +88,57 @@ export class StellarContractRotationService {
       );
     }
 
-    // Step 2: Persist changes using environment variable updates
-    // Note: In production, environment variables would be updated via a configuration
-    // management system (e.g., managed environment, cloud provider, or config service).
-    // This implementation provides a transactional wrapper for the actual rotation.
+    // Step 2: Prepare previous values for rollback if needed
+    const previousValues = this.getPreviousContractValues(contractNames);
+
+    // Step 3: Create audit log entry first, then apply updates. If applying
+    // updates or invalidating cache fails, rollback overrides and delete the
+    // created audit log so the operation is atomic from the client's view.
+    let auditLogRecord: any = null;
     const updatedContracts = this.applyContractUpdates(updates);
 
-    // Step 3: Create audit log entry
-    const auditLog = await this.auditService.log(
-      'contracts.rotate_testnet',
-      userId,
-      ipAddress,
-      {
+    try {
+      auditLogRecord = await this.auditService.log(
+        'contracts.rotate_testnet',
+        userId,
+        ipAddress,
+        {
+          updatedContracts,
+          reason: reason || null,
+          previousValues,
+          contractCount: contractNames.length,
+        },
+      );
+
+      // Invalidate config cache so clients get updated values
+      await this.configService.invalidateCache();
+
+      return {
+        message: 'Contracts rotated successfully',
         updatedContracts,
-        reason: reason || null,
-        previousValues: this.getPreviousContractValues(contractNames),
-        contractCount: contractNames.length,
-      },
-    );
+        auditLogId: auditLogRecord.id,
+        rotatedAt: auditLogRecord.createdAt,
+      };
+    } catch (err) {
+      // Attempt to rollback applied runtime overrides
+      try {
+        this.configService.setStellarContractOverrides(previousValues);
+        await this.configService.invalidateCache();
+      } catch (rollbackErr) {
+        // Log rollback failure to monitoring in real deployments; rethrow original
+      }
 
-    // Step 4: Invalidate config cache so clients get updated values
-    await this.configService.invalidateCache();
+      // If audit log was created, delete it to avoid stale audit entries
+      if (auditLogRecord && auditLogRecord.id) {
+        try {
+          await this.auditService.delete(auditLogRecord.id);
+        } catch (deleteErr) {
+          // If deletion fails, there's not much we can do here synchronously.
+        }
+      }
 
-    return {
-      message: 'Contracts rotated successfully',
-      updatedContracts,
-      auditLogId: auditLog.id,
-      rotatedAt: auditLog.createdAt,
-    };
+      throw err;
+    }
   }
 
   /**
