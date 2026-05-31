@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import type { Cache } from 'cache-manager';
 import stellarConfig from '../stellar/config/stellar.config';
 import { config } from '../lib/config';
 import { StellarConfigResponseDto } from './dto/stellar-config.dto';
@@ -76,7 +76,9 @@ export class ConfigService {
    * the frozen global config object — overrides are stored in-memory and
    * merged when serving the client-facing config endpoint.
    */
-  setStellarContractOverrides(updates: Record<string, string>): void {
+  setStellarContractOverrides(
+    updates: Record<string, string | null | undefined>,
+  ): void {
     for (const [k, v] of Object.entries(updates)) {
       this.contractOverrides[k] = v ?? null;
     }

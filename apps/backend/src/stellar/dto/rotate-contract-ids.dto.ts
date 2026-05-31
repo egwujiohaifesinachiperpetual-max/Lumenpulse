@@ -7,6 +7,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
  * All fields are optional - only specified contracts will be updated.
  */
 export class ContractIdUpdateDto {
+  [key: string]: string | undefined;
+
   @ApiPropertyOptional({
     example: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4',
     description: 'Valid Stellar contract ID for lumenToken contract',

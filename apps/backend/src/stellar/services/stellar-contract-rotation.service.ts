@@ -1,8 +1,6 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { AuditLog } from '../../audit/entities/audit-log.entity';
-import { DataSource } from 'typeorm';
-import type { ConfigType } from '@nestjs/config';
-import stellarConfig from '../config/stellar.config';
+import { config } from '../../lib/config';
 import { AuditService } from '../../audit/audit.service';
 import { ContractRotationService } from './contract-rotation.service';
 import { ConfigService } from '../../config/config.service';
@@ -11,10 +9,7 @@ import {
   ContractIdUpdateDto,
 } from '../dto/rotate-contract-ids.dto';
 
-type ContractName = keyof Exclude<
-  typeof stellarConfig.defaults.contracts,
-  undefined
->;
+type ContractName = keyof typeof config.stellar.contracts;
 
 /**
  * Service to handle testnet contract ID rotation with validation and audit logging.
@@ -30,12 +25,9 @@ type ContractName = keyof Exclude<
 @Injectable()
 export class StellarContractRotationService {
   constructor(
-    private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
     private readonly contractRotationService: ContractRotationService,
     private readonly configService: ConfigService,
-    @Inject(stellarConfig.KEY)
-    private readonly stellarCfg: ConfigType<typeof stellarConfig>,
   ) {}
 
   /**
@@ -157,7 +149,7 @@ export class StellarContractRotationService {
 
     for (const [key, value] of Object.entries(updates)) {
       if (value) {
-        updated[key] = value as string;
+        updated[key] = value;
       }
     }
 
@@ -178,7 +170,7 @@ export class StellarContractRotationService {
     contractNames: ContractName[],
   ): Record<string, string | null> {
     const previous: Record<string, string | null> = {};
-    const contracts = this.stellarCfg.contracts as Record<
+    const contracts = config.stellar.contracts as Record<
       ContractName,
       string | null
     >;

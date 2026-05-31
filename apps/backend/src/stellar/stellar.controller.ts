@@ -14,7 +14,7 @@ import {
   DefaultValuePipe,
   Req,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Throttle } from '@nestjs/throttler';
 import {
