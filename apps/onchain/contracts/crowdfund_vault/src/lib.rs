@@ -1168,6 +1168,7 @@ impl CrowdfundVaultContract {
 
     /// Allocate approved milestone funds to a streaming treasury for gradual unlocking.
     /// This allows projects to have their budget streamed over time instead of receiving it all at once.
+    #[allow(clippy::too_many_arguments)]
     pub fn allocate_to_streaming_treasury(
         env: Env,
         admin: Address,
