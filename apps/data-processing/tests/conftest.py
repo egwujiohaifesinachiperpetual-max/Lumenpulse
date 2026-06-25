@@ -28,10 +28,7 @@ _HEAVY_MODULES = [
     "stellar_sdk.exceptions",
     "stellar_sdk.call_builder",
     "stellar_sdk.call_builder.call_builder_async",
-    "requests",
-    "requests.exceptions",
 ]
 for _mod in _HEAVY_MODULES:
     if _mod not in sys.modules:
         sys.modules[_mod] = MagicMock()
-
