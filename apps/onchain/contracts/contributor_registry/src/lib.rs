@@ -364,12 +364,7 @@ impl ContributorRegistryContract {
                 // an already-approved UpdateProfile proposal. consume_approval
                 // verifies the proposal exists, is Approved, matches the
                 // action, and has not been executed or expired.
-                consume_approval(
-                    &env,
-                    &actor,
-                    pid,
-                    &ProposalAction::UpdateProfile,
-                )?;
+                consume_approval(&env, &actor, pid, &ProposalAction::UpdateProfile)?;
             }
         }
 

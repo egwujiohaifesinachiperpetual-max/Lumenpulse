@@ -100,7 +100,12 @@ pub fn publish_stream_created(
     .publish(env);
 }
 
-pub fn publish_tokens_claimed(env: &Env, beneficiary: Address, amount_claimed: i128, remaining: i128) {
+pub fn publish_tokens_claimed(
+    env: &Env,
+    beneficiary: Address,
+    amount_claimed: i128,
+    remaining: i128,
+) {
     TokensClaimedEvent {
         beneficiary,
         amount_claimed,
@@ -161,7 +166,12 @@ pub fn publish_signature_collected(
     .publish(env);
 }
 
-pub fn publish_proposal_executed(env: &Env, proposal_id: u64, executor: Address, action: ProposalAction) {
+pub fn publish_proposal_executed(
+    env: &Env,
+    proposal_id: u64,
+    executor: Address,
+    action: ProposalAction,
+) {
     ProposalExecutedEvent {
         proposal_id,
         executor,

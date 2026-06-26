@@ -9,8 +9,7 @@ use errors::TreasuryError;
 use multisig::{
     cancel as multisig_cancel, configure as multisig_configure, consume_approval,
     expire as multisig_expire, get_config as multisig_get_config, get_proposal,
-    propose as multisig_propose, replace_config as multisig_replace_config,
-    sign as multisig_sign,
+    propose as multisig_propose, replace_config as multisig_replace_config, sign as multisig_sign,
 };
 use reentrancy_guard::{acquire as acquire_reentrancy, release as release_reentrancy};
 use soroban_sdk::{contract, contractimpl, token, Address, Env, Vec};
@@ -73,7 +72,7 @@ impl TreasuryContract {
         threshold: u32,
     ) -> Result<(), TreasuryError> {
         multisig_configure(&env, signers.clone(), threshold)?;
-        let signer_count = signers.len() as u32;
+        let signer_count = signers.len();
         let bootstrapper = signers.get(0).ok_or(TreasuryError::InvalidMultisigConfig)?;
         events::publish_multisig_configured(
             &env,
@@ -94,11 +93,7 @@ impl TreasuryContract {
         multisig_propose(&env, proposer, action)
     }
 
-    pub fn sign_proposal(
-        env: Env,
-        signer: Address,
-        proposal_id: u64,
-    ) -> Result<(), TreasuryError> {
+    pub fn sign_proposal(env: Env, signer: Address, proposal_id: u64) -> Result<(), TreasuryError> {
         let _ = multisig_sign(&env, signer, proposal_id)?;
         Ok(())
     }

@@ -6,8 +6,8 @@ use crate::events::{
     publish_signature_collected,
 };
 use crate::storage::{
-    DataKey, MultisigConfig, Proposal, ProposalAction, ProposalStatus, Signer,
-    MAX_SIGNERS, PROPOSAL_TTL_SECS,
+    DataKey, MultisigConfig, Proposal, ProposalAction, ProposalStatus, Signer, MAX_SIGNERS,
+    PROPOSAL_TTL_SECS,
 };
 
 /// Load the multisig config from instance storage.
@@ -19,7 +19,10 @@ pub(crate) fn get_config(env: &Env) -> Result<MultisigConfig, TreasuryError> {
 }
 
 /// Locate the `Signer` record for `addr` or return `Unauthorized`.
-pub(crate) fn find_signer(config: &MultisigConfig, addr: &Address) -> Result<Signer, TreasuryError> {
+pub(crate) fn find_signer(
+    config: &MultisigConfig,
+    addr: &Address,
+) -> Result<Signer, TreasuryError> {
     for s in config.signers.iter() {
         if s.address == *addr {
             return Ok(s);
@@ -85,9 +88,7 @@ pub(crate) fn configure(
 ) -> Result<(), TreasuryError> {
     validate_config(&signers, threshold)?;
 
-    let bootstrapper = signers
-        .get(0)
-        .ok_or(TreasuryError::InvalidMultisigConfig)?;
+    let bootstrapper = signers.get(0).ok_or(TreasuryError::InvalidMultisigConfig)?;
     bootstrapper.address.require_auth();
 
     let config = MultisigConfig {
@@ -100,9 +101,10 @@ pub(crate) fn configure(
     env.storage()
         .instance()
         .set(&DataKey::NextProposalId, &0u64);
-    env.storage()
-        .instance()
-        .extend_ttl(crate::storage::LEDGER_THRESHOLD, crate::storage::LEDGER_BUMP);
+    env.storage().instance().extend_ttl(
+        crate::storage::LEDGER_THRESHOLD,
+        crate::storage::LEDGER_BUMP,
+    );
     Ok(())
 }
 
@@ -165,7 +167,14 @@ pub(crate) fn propose(
         .instance()
         .set(&DataKey::Proposal(id), &proposal);
 
-    publish_proposal_created(env, id, proposer, action, weight_collected, config.threshold);
+    publish_proposal_created(
+        env,
+        id,
+        proposer,
+        action,
+        weight_collected,
+        config.threshold,
+    );
 
     Ok(id)
 }
@@ -249,7 +258,11 @@ pub(crate) fn consume_approval(
 }
 
 /// Cancel an in-flight proposal. Any signer may cancel.
-pub(crate) fn cancel(env: &Env, signer_addr: Address, proposal_id: u64) -> Result<(), TreasuryError> {
+pub(crate) fn cancel(
+    env: &Env,
+    signer_addr: Address,
+    proposal_id: u64,
+) -> Result<(), TreasuryError> {
     signer_addr.require_auth();
 
     let config = get_config(env)?;
