@@ -33,6 +33,11 @@ export class MetricsService implements OnModuleInit {
   private readonly anomaliesDetectedCounter: Counter<string>;
   private readonly fetchErrorsCounter: Counter<string>;
 
+  // Cache metrics //
+  private readonly cacheHitsCounter: Counter<string>;
+  private readonly cacheMissesCounter: Counter<string>;
+  private readonly cacheFetchDuration: Histogram<string>;
+
   // Running totals for the rolling-average sentiment gauge
   private sentimentSum = 0;
   private sentimentCount = 0;
@@ -123,6 +128,29 @@ export class MetricsService implements OnModuleInit {
       name: 'lumenpulse_fetch_errors_total',
       help: 'Errors encountered while fetching news from external sources',
       labelNames: ['source', 'error_code'] as const,
+      registers: [this.registry],
+    });
+
+    // Cache metrics //
+    this.cacheHitsCounter = new Counter({
+      name: 'cache_hits_total',
+      help: 'Total number of cache hits',
+      labelNames: ['key_type'] as const,
+      registers: [this.registry],
+    });
+
+    this.cacheMissesCounter = new Counter({
+      name: 'cache_misses_total',
+      help: 'Total number of cache misses',
+      labelNames: ['key_type'] as const,
+      registers: [this.registry],
+    });
+
+    this.cacheFetchDuration = new Histogram({
+      name: 'cache_fetch_duration_ms',
+      help: 'Cache fetch latency in milliseconds',
+      labelNames: ['key_type'] as const,
+      buckets: [1, 5, 10, 25, 50, 100, 250, 500, 1000],
       registers: [this.registry],
     });
   }
@@ -262,6 +290,106 @@ export class MetricsService implements OnModuleInit {
    */
   recordFetchError(source: string, errorCode = 'UNKNOWN'): void {
     this.fetchErrorsCounter.inc({ source, error_code: errorCode });
+  }
+
+  // ── Generic Metrics Helpers ─────────────────────────────────────────────────────
+
+  /**
+   * Increment a counter metric.
+   *
+   * @param name  Counter metric name
+   * @param labels Label values
+   */
+  incrementCounter(name: string, labels: Record<string, string> = {}): void {
+    const counter = this.getMetricByName(name) as Counter<string> | undefined;
+    if (counter) {
+      counter.inc(labels);
+    }
+  }
+
+  /**
+   * Record a histogram observation.
+   *
+   * @param name  Histogram metric name
+   * @param value Value to observe
+   * @param labels Label values
+   */
+  recordHistogram(name: string, value: number, labels: Record<string, string> = {}): void {
+    const histogram = this.getMetricByName(name) as Histogram<string> | undefined;
+    if (histogram) {
+      histogram.observe(labels, value);
+    }
+  }
+
+  /**
+   * Get current value of a counter metric.
+   *
+   * @param name  Counter metric name
+   * @returns Current counter value
+   */
+  getCounterValue(name: string): number {
+    const counter = this.getMetricByName(name) as Counter<string> | undefined;
+    if (!counter) return 0;
+    
+    const metric = this.registry.getMetricAsJSON(name);
+    if (metric && metric.values && metric.values.length > 0) {
+      return metric.values[0].value as number;
+    }
+    return 0;
+  }
+
+  /**
+   * Helper to get a metric by name from the registry.
+   */
+  private getMetricByName(name: string): Counter<string> | Histogram<string> | Gauge<string> | undefined {
+    const metric = this.registry.getSingleMetric(name);
+    return metric as Counter<string> | Histogram<string> | Gauge<string> | undefined;
+  }
+
+  // ── Cache-specific Metrics ─────────────────────────────────────────────────────
+
+  /**
+   * Record a cache hit.
+   *
+   * @param keyType  Type of cache key (e.g., 'account_balance', 'contract_read')
+   */
+  recordCacheHit(keyType: string): void {
+    this.cacheHitsCounter.inc({ key_type: keyType });
+  }
+
+  /**
+   * Record a cache miss.
+   *
+   * @param keyType  Type of cache key (e.g., 'account_balance', 'contract_read')
+   */
+  recordCacheMiss(keyType: string): void {
+    this.cacheMissesCounter.inc({ key_type: keyType });
+  }
+
+  /**
+   * Record cache fetch duration.
+   *
+   * @param durationMs  Fetch duration in milliseconds
+   * @param keyType     Type of cache key
+   */
+  recordCacheFetchDuration(durationMs: number, keyType: string): void {
+    this.cacheFetchDuration.observe({ key_type: keyType }, durationMs);
+  }
+
+  /**
+   * Get cache hit rate.
+   *
+   * @returns Hit rate between 0 and 1
+   */
+  getCacheHitRate(): number {
+    const hitsMetric = this.registry.getMetricAsJSON('cache_hits_total');
+    const missesMetric = this.registry.getMetricAsJSON('cache_misses_total');
+    
+    const hits = hitsMetric?.values?.[0]?.value as number ?? 0;
+    const misses = missesMetric?.values?.[0]?.value as number ?? 0;
+    const total = hits + misses;
+    
+    return total > 0 ? hits / total : 0;
   }
 
   //Dynamic metric helpers (legacy API)
