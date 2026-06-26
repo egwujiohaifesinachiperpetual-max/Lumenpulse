@@ -316,8 +316,8 @@ class TestRoundAnomalyDetector:
             unique_contributors=10,
             unique_projects=5,
             contributor_distribution={
-                "addr1": 4500.0,
-                **{f"addr{i}": 61.1 for i in range(9)}
+                "addr1": 4000.0,
+                **{f"addr{i}": 111.1 for i in range(2,10)},
             },
             project_contributions={1: 2500.0, 2: 2500.0},
             project_contributor_counts={1: 5, 2: 5},
@@ -333,8 +333,8 @@ class TestRoundAnomalyDetector:
             unique_contributors=10,
             unique_projects=5,
             contributor_distribution={
-                "addr1": 4000.0,  # Top 10%
-                **{f"addr{i}": 111.1 for i in range(9)}
+                "whale": 4000.0,  # Top 10%
+                **{f"addr{i}": 111.1 for i in range(9)},
             },
             project_contributions={1: 2500.0, 2: 2500.0},
             project_contributor_counts={1: 5, 2: 5},
