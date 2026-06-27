@@ -60,20 +60,23 @@ export class TransactionStatusService {
     for (const callback of pendingCallbacks) {
       try {
         const txResponse = await this.sorobanRpcService.getTransaction(callback.transactionHash);
+        const currentStatus = String(txResponse.status);
         
-        if (txResponse.status === 'SUCCESS' || txResponse.status === 'FAILED') {
+        if (currentStatus === 'SUCCESS' || currentStatus === 'FAILED') {
           this.logger.log(`Transaction ${callback.transactionHash} finalized with status ${txResponse.status}`);
           
           callback.status = TransactionCallbackStatus.FINALIZED;
-          if (txResponse.status === 'FAILED') {
-            callback.lastError = JSON.stringify((txResponse as any).errorResult ?? 'Unknown error');
+          if (currentStatus === 'FAILED') {
+            const extendedTx = txResponse as Record<string, unknown>;
+            callback.lastError = JSON.stringify(extendedTx.errorResult ?? 'Unknown error');
           }
           
           await this.callbackRepository.save(callback);
-          await this.notifyCallback(callback, txResponse.status);
+          await this.notifyCallback(callback, currentStatus);
         }
       } catch (error) {
-        this.logger.error(`Failed to check status for transaction ${callback.transactionHash}: ${error.message}`);
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(`Failed to check status for transaction ${callback.transactionHash}: ${errorMsg}`);
       }
     }
   }
@@ -88,9 +91,10 @@ export class TransactionStatusService {
     for (const callback of needingNotification) {
       try {
         const txResponse = await this.sorobanRpcService.getTransaction(callback.transactionHash);
-        await this.notifyCallback(callback, txResponse.status);
+        await this.notifyCallback(callback, String(txResponse.status));
       } catch (error) {
-        this.logger.error(`Failed to retry notification for ${callback.transactionHash}: ${error.message}`);
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(`Failed to retry notification for ${callback.transactionHash}: ${errorMsg}`);
       }
     }
   }
@@ -120,10 +124,11 @@ export class TransactionStatusService {
       await this.callbackRepository.save(callback);
       this.logger.log(`Successfully notified callback for ${callback.transactionHash}`);
     } catch (error) {
-      this.logger.error(`Failed to notify callback for ${callback.transactionHash}: ${error.message}`);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to notify callback for ${callback.transactionHash}: ${errorMsg}`);
       callback.retryCount += 1;
       callback.status = TransactionCallbackStatus.FAILED_TO_NOTIFY;
-      callback.lastError = `Notification failed: ${error.message}`;
+      callback.lastError = `Notification failed: ${errorMsg}`;
       await this.callbackRepository.save(callback);
     }
   }
