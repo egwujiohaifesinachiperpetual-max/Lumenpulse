@@ -89,7 +89,7 @@ interface UseWalletReadinessOptions {
  * contexts update, so the check itself is cheap.
  */
 export function useWalletReadiness(
-  options: UseWalletReadinessOptions = {}
+  options: UseWalletReadinessOptions = {},
 ): ReadinessResult {
   const { publicKey, status: walletStatus } = useStellarWallet();
   const { config, status: configStatus } = useStellarConfig();

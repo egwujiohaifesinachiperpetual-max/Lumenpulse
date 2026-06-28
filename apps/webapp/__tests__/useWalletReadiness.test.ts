@@ -12,7 +12,9 @@ vi.mock("@/contexts/StellarConfigContext", () => ({
   useStellarConfig: vi.fn(),
 }));
 
-const mockWallet = (overrides: Partial<ReturnType<typeof useStellarWallet>>) => {
+const mockWallet = (
+  overrides: Partial<ReturnType<typeof useStellarWallet>>,
+) => {
   vi.mocked(useStellarWallet).mockReturnValue({
     publicKey: null,
     status: "disconnected",
@@ -20,7 +22,9 @@ const mockWallet = (overrides: Partial<ReturnType<typeof useStellarWallet>>) => 
   } as any);
 };
 
-const mockConfig = (overrides: Partial<ReturnType<typeof useStellarConfig>>) => {
+const mockConfig = (
+  overrides: Partial<ReturnType<typeof useStellarConfig>>,
+) => {
   vi.mocked(useStellarConfig).mockReturnValue({
     config: null,
     status: "loading",
@@ -169,9 +173,7 @@ describe("useWalletReadiness", () => {
     mockWallet({ publicKey: "GABC", status: "connected" });
     mockConfig({ config: validConfig, status: "ready" });
 
-    const { result } = renderHook(() =>
-      useWalletReadiness({ amount: null }),
-    );
+    const { result } = renderHook(() => useWalletReadiness({ amount: null }));
     expect(result.current.issues.map((i) => i.reason)).not.toContain(
       "amount_invalid",
     );
