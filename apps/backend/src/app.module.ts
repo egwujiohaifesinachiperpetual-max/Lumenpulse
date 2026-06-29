@@ -30,6 +30,7 @@ import databaseConfig from './database/database.config';
 import stellarConfig from './stellar/config/stellar.config';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { RequestContextService } from './common/services/request-context.service';
 import { RateLimitGuard } from './common/rate-limit/rate-limit.guard';
 import { RateLimitModule } from './common/rate-limit/rate-limit.module';
 import { RateLimitStorageService } from './common/rate-limit/rate-limit.storage';
@@ -132,6 +133,7 @@ import { VestingWalletModule } from './vesting-wallet/vesting-wallet.module';
   controllers: [AppController, TestController, TestExceptionController],
   providers: [
     AppService,
+    RequestContextService,
     {
       provide: APP_GUARD,
       useClass: RateLimitGuard,
