@@ -16,7 +16,7 @@ use soroban_sdk::token::TokenClient;
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{contract, contractimpl, vec, Address, BytesN, Env, Symbol, Vec};
 use storage::{
-    DataKey, MilestoneDispute, ProjectData, ProtocolStats, LEDGER_BUMP, LEDGER_THRESHOLD,
+    DataKey, MilestoneDispute, ProjectData, ProjectStorageSummary, ProtocolStats, LEDGER_BUMP, LEDGER_THRESHOLD,
 };
 
 const CURRENT_STORAGE_VERSION: u32 = 1;
@@ -1883,6 +1883,51 @@ impl CrowdfundVaultContract {
             .persistent()
             .get(&contributor_count_key)
             .unwrap_or(0))
+    }
+
+    /// Get refund receipt count for a project
+    /// Note: This contract does not track individual refund receipts, so this returns 0
+    pub fn get_refund_receipt_count(env: Env, project_id: u64) -> Result<u64, CrowdfundError> {
+        Self::require_current_storage_version(&env)?;
+
+        // Check if project exists
+        env.storage()
+            .persistent()
+            .get::<_, ProjectData>(&DataKey::Project(project_id))
+            .ok_or(CrowdfundError::ProjectNotFound)?;
+
+        // This contract does not track refund receipts, return 0
+        Ok(0)
+    }
+
+    /// Get project storage summary
+    pub fn get_project_storage_summary(
+        env: Env,
+        project_id: u64,
+    ) -> Result<ProjectStorageSummary, CrowdfundError> {
+        let project_exists = Self::get_project(env.clone(), project_id).is_ok();
+        let contributor_count = if project_exists {
+            Self::get_contributor_count(env.clone(), project_id).unwrap_or(0)
+        } else {
+            0
+        };
+        let refund_receipt_count = if project_exists {
+            Self::get_refund_receipt_count(env.clone(), project_id).unwrap_or(0)
+        } else {
+            0
+        };
+        let total_projects: u64 = env
+            .storage()
+            .instance()
+            .get(&DataKey::NextProjectId)
+            .unwrap_or(0u64);
+        Ok(ProjectStorageSummary {
+            project_id,
+            project_exists,
+            contributor_count,
+            refund_receipt_count,
+            total_projects,
+        })
     }
 
     pub fn pause(env: Env, admin: Address) -> Result<bool, CrowdfundError> {
