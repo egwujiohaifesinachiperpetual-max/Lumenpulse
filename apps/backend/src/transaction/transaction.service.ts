@@ -95,6 +95,7 @@ export class TransactionService {
         'STELLAR_OPERATIONS_CACHE_TTL',
         15_000,
       ),
+      contractReadTTL: 60_000,
     });
 
     if (this.useMockData) {
