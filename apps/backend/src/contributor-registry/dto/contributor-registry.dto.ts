@@ -73,7 +73,10 @@ export class ContributorResponseDto {
   @ApiProperty({ example: 42 })
   reputationScore: number;
 
-  @ApiProperty({ enum: ['Novice', 'Builder', 'Architect', 'Core'], example: 'Builder' })
+  @ApiProperty({
+    enum: ['Novice', 'Builder', 'Architect', 'Core'],
+    example: 'Builder',
+  })
   tier: string;
 
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
@@ -87,7 +90,10 @@ export class ReputationResponseDto {
   @ApiProperty({ example: 42 })
   reputationScore: number;
 
-  @ApiProperty({ enum: ['Novice', 'Builder', 'Architect', 'Core'], example: 'Builder' })
+  @ApiProperty({
+    enum: ['Novice', 'Builder', 'Architect', 'Core'],
+    example: 'Builder',
+  })
   tier: string;
 }
 
