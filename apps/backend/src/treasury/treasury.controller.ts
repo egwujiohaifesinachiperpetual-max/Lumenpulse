@@ -10,6 +10,7 @@ import {
   UseGuards,
   Request,
   Logger,
+  UsePipes,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -36,6 +37,7 @@ import {
 import { TreasuryService } from './treasury.service';
 import { AuditBlockchainAction } from '../admin-audit/decorators/audit-blockchain-action.decorator';
 import { Request as ExpressRequest } from 'express';
+import { CustomValidationPipe } from '../common/pipes/validation.pipe';
 
 // Define a minimal user interface for type safety
 interface RequestUser {
@@ -51,6 +53,7 @@ interface AuthenticatedRequest extends ExpressRequest {
 
 @ApiTags('treasury')
 @Controller('treasury')
+@UsePipes(CustomValidationPipe)
 export class TreasuryController {
   private readonly logger = new Logger(TreasuryController.name);
 

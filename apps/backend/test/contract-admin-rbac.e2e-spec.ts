@@ -2,11 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { type App } from 'supertest/types';
 
 // Type-safe request wrapper to avoid ESLint warnings
 const makeRequest = (app: INestApplication) => {
   const httpServer = app.getHttpServer() as unknown;
-  return request(httpServer);
+  return request(httpServer as App);
 };
 
 describe('Contract Admin RBAC (e2e)', () => {
