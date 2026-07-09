@@ -1,5 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import {
+  IsStellarAddress,
+  IsBase64Xdr,
+} from '../../common/validators/stellar.validators';
 
 const GITHUB_HANDLE_PATTERN = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
 const GITHUB_HANDLE_MESSAGE =
@@ -11,7 +15,10 @@ export class RegisterContributorDto {
     description: 'Stellar public key of the contributor (G...)',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'address is required' })
+  @IsStellarAddress({
+    message: 'address must be a valid Stellar address (G...)',
+  })
   address: string;
 
   @ApiProperty({
@@ -19,7 +26,7 @@ export class RegisterContributorDto {
     description: 'GitHub username of the contributor',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'githubHandle is required' })
   @Matches(GITHUB_HANDLE_PATTERN, { message: GITHUB_HANDLE_MESSAGE })
   githubHandle: string;
 }
@@ -30,7 +37,10 @@ export class RegisterWithSigDto {
     description: 'Stellar public key of the contributor (G...)',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'address is required' })
+  @IsStellarAddress({
+    message: 'address must be a valid Stellar address (G...)',
+  })
   address: string;
 
   @ApiProperty({
@@ -38,7 +48,7 @@ export class RegisterWithSigDto {
     description: 'GitHub username of the contributor',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'githubHandle is required' })
   @Matches(GITHUB_HANDLE_PATTERN, { message: GITHUB_HANDLE_MESSAGE })
   githubHandle: string;
 
@@ -49,7 +59,10 @@ export class RegisterWithSigDto {
     example: 'AAAAAQAAAA...',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'signedAuthEntryXdr is required' })
+  @IsBase64Xdr({
+    message: 'signedAuthEntryXdr must be a valid base64-encoded XDR',
+  })
   signedAuthEntryXdr: string;
 
   @ApiPropertyOptional({
@@ -73,7 +86,10 @@ export class ContributorResponseDto {
   @ApiProperty({ example: 42 })
   reputationScore: number;
 
-  @ApiProperty({ enum: ['Novice', 'Builder', 'Architect', 'Core'], example: 'Builder' })
+  @ApiProperty({
+    enum: ['Novice', 'Builder', 'Architect', 'Core'],
+    example: 'Builder',
+  })
   tier: string;
 
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z' })
@@ -87,7 +103,10 @@ export class ReputationResponseDto {
   @ApiProperty({ example: 42 })
   reputationScore: number;
 
-  @ApiProperty({ enum: ['Novice', 'Builder', 'Architect', 'Core'], example: 'Builder' })
+  @ApiProperty({
+    enum: ['Novice', 'Builder', 'Architect', 'Core'],
+    example: 'Builder',
+  })
   tier: string;
 }
 
