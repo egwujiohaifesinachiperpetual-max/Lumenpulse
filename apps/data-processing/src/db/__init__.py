@@ -15,6 +15,7 @@ from .models import (
     ProjectMilestone,
     NewsInsight,
     AssetTrend,
+    EntityLinkingReview,
 )
 from .cohort_models import (
     GrantRound,
@@ -43,5 +44,6 @@ __all__ = [
     "ContributorCohort",
     "CohortRetentionSummary",
     "RepeatContributorSummary",
+    "EntityLinkingReview",
     "PostgresService",
 ]
